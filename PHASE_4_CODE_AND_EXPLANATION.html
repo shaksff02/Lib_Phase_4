@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phase 4: Authentication & Authorization - Complete Code & Explanation</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; background: #f5f7fa; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 50px 40px; border-radius: 12px; margin-bottom: 40px; box-shadow: 0 8px 30px rgba(102, 126, 234, 0.3); text-align: center; border: 1px solid rgba(255, 255, 255, 0.2); }
+        header h1 { font-size: 2.8em; margin-bottom: 15px; font-weight: 700; letter-spacing: -0.5px; text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2); }
+        header p { font-size: 1.15em; opacity: 0.95; font-weight: 300; letter-spacing: 0.5px; }
+        nav { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 0; border-radius: 10px; margin-bottom: 30px; box-shadow: 0 4px 20px rgba(102, 126, 234, 0.25); position: sticky; top: 20px; z-index: 100; overflow: hidden; }
+        nav h3 { margin: 0; padding: 20px 30px; color: white; font-size: 1.2em; background: rgba(0, 0, 0, 0.1); border-bottom: 2px solid rgba(255, 255, 255, 0.2); text-transform: uppercase; letter-spacing: 1px; }
+        nav ul { list-style: none; display: flex; flex-wrap: wrap; gap: 0; padding: 15px 30px; margin: 0; background: rgba(255, 255, 255, 0.98); }
+        nav li { margin: 0; }
+        nav a { display: inline-block; padding: 10px 18px; background: transparent; color: #667eea; text-decoration: none; border-radius: 6px; transition: all 0.3s ease; font-weight: 600; font-size: 0.95em; border: 2px solid transparent; }
+        nav a:hover { background: #f0f0f0; border-color: #667eea; color: #764ba2; transform: translateY(-1px); }
+        nav a.active { background: #667eea; color: white; border-color: #667eea; }
+        .section { background: white; padding: 30px; border-radius: 10px; margin-bottom: 30px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08); border-left: 5px solid #667eea; }
+        h2 { color: #667eea; font-size: 1.8em; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid #667eea; }
+        h3 { color: #764ba2; font-size: 1.3em; margin-top: 25px; margin-bottom: 15px; }
+        .code-block { background: #282c34; color: #abb2bf; padding: 25px; border-radius: 8px; overflow-x: auto; margin: 15px 0; border-left: 4px solid #667eea; font-family: 'Courier New', monospace; font-size: 0.95em; line-height: 1.8; white-space: pre; tab-size: 4; box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5); }
+        .keyword { color: #c678dd; }
+        .string { color: #98c379; }
+        .function { color: #61afef; }
+        .comment { color: #5c6370; font-style: italic; }
+        .number { color: #d19a66; }
+        .tag { color: #e06c75; }
+        .success { background: #d4edda; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #28a745; }
+        .info { background: #d1ecf1; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #0c5460; }
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        table th { background: #667eea; color: white; padding: 12px; text-align: left; }
+        table td { padding: 12px; border-bottom: 1px solid #e0e0e0; }
+        .highlight { background: #fff9c4; padding: 2px 6px; border-radius: 3px; font-weight: 500; }
+        footer { background: #667eea; color: white; padding: 30px; border-radius: 10px; text-align: center; margin-top: 50px; }
+        .btn-print { background: #667eea; color: white; padding: 12px 25px; border: none; border-radius: 5px; cursor: pointer; font-size: 1em; font-weight: 600; margin-bottom: 20px; transition: all 0.3s; }
+        @media print { nav, .btn-print { display: none; } }
+    </style>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const navLinks = document.querySelectorAll('nav a');
+            const sections = document.querySelectorAll('.section, header');
+            function updateActiveLink() {
+                let current = '';
+                sections.forEach(section => {
+                    if (window.scrollY >= section.offsetTop - 150) {
+                        current = section.getAttribute('id');
+                    }
+                });
+                navLinks.forEach(link => {
+                    link.classList.remove('active');
+                    if (link.getAttribute('href') === '#' + current) {
+                        link.classList.add('active');
+                    }
+                });
+            }
+            window.addEventListener('scroll', updateActiveLink);
+            updateActiveLink();
+        });
+    </script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📚 Library Management System - Phase 4</h1>
+            <p>User Authentication & Authorization - Complete Code Guide for Students</p>
+        </header>
+        
+        <nav>
+            <h3>📑 Quick Navigation</h3>
+            <ul>
+                <li><a href="#overview">Overview</a></li>
+                <li><a href="#auth">Authentication</a></li>
+                <li><a href="#decorators">Decorators</a></li>
+                <li><a href="#dashboards">Dashboards</a></li>
+            </ul>
+        </nav>
+        
+        <button class="btn-print" onclick="window.print()">🖨️ Print this Guide</button>
+        
+        <div class="section" id="overview">
+            <h2>🎯 Phase 4 Overview</h2>
+            <h3>What You'll Learn</h3>
+            <ul style="margin-left: 20px; margin-top: 10px;">
+                <li>✅ User registration & login</li>
+                <li>✅ Role-based access control</li>
+                <li>✅ Permission decorators</li>
+                <li>✅ User dashboards</li>
+            </ul>
+        </div>
+        
+        <div class="section" id="auth">
+            <h2>🔐 Authentication Views</h2>
+            
+            <h3>Registration View</h3>
+            <div class="code-block"><span class="keyword">from</span> django.contrib.auth.models <span class="keyword">import</span> User
+<span class="keyword">from</span> django.contrib.auth <span class="keyword">import</span> authenticate, login
+
+<span class="keyword">def</span> <span class="function">register</span>(request):
+    <span class="keyword">if</span> request.method == <span class="string\">'POST'</span>:
+        username = request.POST.get(<span class=\"string\">'username'</span>)
+        email = request.POST.get(<span class=\"string\">'email'</span>)
+        password = request.POST.get(<span class=\"string\">'password'</span>)
+        
+        <span class=\"keyword\">if</span> User.objects.filter(username=username).exists():
+            messages.error(request, <span class=\"string\">'Username taken'</span>)
+        <span class=\"keyword\">else</span>:
+            user = User.objects.create_user(
+                username=username,
+                email=email,
+                password=password
+            )
+            user.save()
+            messages.success(request, <span class=\"string\">'Registered successfully'</span>)
+            <span class=\"keyword\">return</span> redirect(<span class=\"string\">'myapp:login'</span>)
+    
+    <span class=\"keyword\">return</span> render(request, <span class=\"string\">'myapp/register.html'</span>)
+
+<span class=\"keyword\">def</span> <span class=\"function\">login_view</span>(request):
+    <span class=\"keyword\">if</span> request.method == <span class=\"string\">'POST'</span>:
+        username = request.POST.get(<span class=\"string\">'username'</span>)
+        password = request.POST.get(<span class=\"string\">'password'</span>)
+        
+        user = authenticate(request, username=username, 
+                          password=password)
+        <span class=\"keyword\">if</span> user <span class=\"keyword\">is not</span> <span class=\"keyword\">None</span>:
+            login(request, user)
+            <span class=\"keyword\">return</span> redirect(<span class=\"string\">'myapp:home'</span>)
+        <span class=\"keyword\">else</span>:
+            messages.error(request, <span class=\"string\">'Invalid credentials'</span>)
+    
+    <span class=\"keyword\">return</span> render(request, <span class=\"string\">'myapp/login.html'</span>)
+
+<span class=\"keyword\">def</span> <span class=\"function\">logout_view</span>(request):
+    <span class=\"keyword\">from</span> django.contrib.auth <span class=\"keyword\">import</span> logout
+    logout(request)
+    messages.success(request, <span class=\"string\">'Logged out successfully'</span>)
+    <span class=\"keyword\">return</span> redirect(<span class=\"string\">'myapp:login'</span>)
+            </div>
+        </div>
+        
+        <div class="section" id="decorators">
+            <h2>🛡️ Permission Decorators</h2>
+            
+            <div class="code-block"><span class="keyword">from</span> functools <span class="keyword">import</span> wraps
+<span class="keyword">from</span> django.shortcuts <span class="keyword">import</span> redirect
+
+<span class="keyword">def</span> <span class="function">login_required_custom</span>(view_func):
+    @wraps(view_func)
+    <span class="keyword\">def</span> wrapper(request, *args, **kwargs):
+        <span class=\"keyword\">if</span> <span class=\"keyword\">not</span> request.user.is_authenticated:
+            <span class=\"keyword\">return</span> redirect(<span class=\"string\">'myapp:login'</span>)
+        <span class=\"keyword\">return</span> view_func(request, *args, **kwargs)
+    <span class=\"keyword\">return</span> wrapper
+
+<span class=\"keyword\">def</span> <span class=\"function\">admin_required</span>(view_func):
+    @wraps(view_func)
+    <span class=\"keyword\">def</span> wrapper(request, *args, **kwargs):
+        <span class=\"keyword\">if</span> <span class=\"keyword\">not</span> request.user.is_staff:
+            messages.error(request, <span class=\"string\">'Admin access required'</span>)
+            <span class=\"keyword\">return</span> redirect(<span class=\"string\">'myapp:home'</span>)
+        <span class=\"keyword\">return</span> view_func(request, *args, **kwargs)
+    <span class=\"keyword\">return</span> wrapper
+
+<span class=\"keyword\">def</span> <span class=\"function\">student_required</span>(view_func):
+    @wraps(view_func)
+    <span class=\"keyword\">def</span> wrapper(request, *args, **kwargs):
+        <span class=\"keyword\">if</span> request.user.is_staff:
+            messages.error(request, <span class=\"string\">'Student access only'</span>)
+            <span class=\"keyword\">return</span> redirect(<span class=\"string\">'myapp:home'</span>)
+        <span class=\"keyword\">return</span> view_func(request, *args, **kwargs)
+    <span class=\"keyword\">return</span> wrapper
+            </div>
+            
+            <h3>Usage Example</h3>
+            <div class="code-block"><span class="keyword\">@admin_required</span>
+<span class=\"keyword\">def</span> <span class=\"function\">admin_dashboard</span>(request):
+    books = Book.objects.all()
+    students = Student.objects.all()
+    context = {
+        <span class=\"string\">'total_books'</span>: books.count(),
+        <span class=\"string\">'total_students'</span>: students.count(),
+    }
+    <span class=\"keyword\">return</span> render(request, <span class=\"string\">'myapp/admin_dashboard.html'</span>, context)
+
+<span class=\"keyword\">@student_required</span>
+<span class=\"keyword\">def</span> <span class=\"function\">student_dashboard</span>(request):
+    student = Student.objects.get(user=request.user)
+    issued_books = BookIssue.objects.filter(student=student)
+    context = {<span class=\"string\">'issued_books'</span>: issued_books}
+    <span class=\"keyword\">return</span> render(request, <span class=\"string\">'myapp/student_dashboard.html'</span>, context)
+            </div>
+        </div>
+        
+        <div class="section" id="dashboards">
+            <h2>📊 User Dashboards</h2>
+            
+            <h3>Home View with Redirects</h3>
+            <div class="code-block"><span class="keyword">def</span> <span class="function">home</span>(request):
+    <span class="keyword\">if</span> <span class=\"keyword\">not</span> request.user.is_authenticated:
+        <span class=\"keyword\">return</span> redirect(<span class=\"string\">'myapp:login'</span>)
+    
+    <span class=\"keyword\">if</span> request.user.is_staff:
+        <span class=\"keyword\">return</span> redirect(<span class=\"string\">'myapp:admin_dashboard'</span>)
+    <span class=\"keyword\">else</span>:
+        <span class=\"keyword\">return</span> redirect(<span class=\"string\">'myapp:student_dashboard'</span>)
+            </div>
+            
+            <div class="success">
+                <h5>✓ Role-Based Access</h5>
+                <p>Users are automatically directed to their appropriate dashboard based on their role (staff=librarian/admin, regular user=student)</p>
+            </div>
+        </div>
+        
+        <footer>
+            <h3>📚 Phase 4 Complete!</h3>
+            <p>Next: Phase 5 - Advanced Features & Search</p>
+        </footer>
+    </div>
+</body>
+</html>
