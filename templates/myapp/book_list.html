@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Library - Book List</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+        }
+        
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+        
+        .header-subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 30px;
+            border-radius: 8px;
+            text-align: center;
+            flex: 1;
+            min-width: 150px;
+        }
+        
+        .stat-card h3 {
+            font-size: 2em;
+            margin-bottom: 5px;
+        }
+        
+        .stat-card p {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+        
+        .no-books {
+            text-align: center;
+            color: #999;
+            padding: 40px 20px;
+            font-size: 1.1em;
+        }
+        
+        .books-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        .book-card {
+            background: #f9f9f9;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .book-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .book-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 8px;
+        }
+        
+        .book-detail {
+            color: #666;
+            margin: 8px 0;
+            font-size: 0.95em;
+        }
+        
+        .book-detail strong {
+            color: #333;
+        }
+        
+        .availability {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+            font-weight: bold;
+        }
+        
+        .available {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        
+        .unavailable {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        
+        .book-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+        
+        .btn-edit,
+        .btn-delete {
+            flex: 1;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 4px;
+            font-size: 0.85em;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            text-align: center;
+            display: inline-block;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-edit {
+            background: #17a2b8;
+            color: white;
+        }
+        
+        .btn-edit:hover {
+            background: #138496;
+            transform: translateY(-2px);
+            box-shadow: 0 3px 10px rgba(23, 162, 184, 0.3);
+        }
+        
+        .btn-delete {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .btn-delete:hover {
+            background: #c82333;
+            transform: translateY(-2px);
+            box-shadow: 0 3px 10px rgba(220, 53, 69, 0.3);
+        }
+        
+        .add-book-section {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .btn-add {
+            display: inline-block;
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            padding: 12px 30px;
+            border-radius: 5px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            font-size: 1em;
+        }
+        
+        .btn-add:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(40, 167, 69, 0.4);
+        }
+        
+        .admin-section {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 40px;
+            border-top: 2px solid #e0e0e0;
+        }
+        
+        .admin-link {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 30px;
+            border-radius: 5px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            margin: 5px;
+        }
+        
+        .admin-link:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📚 Library Management System</h1>
+        <p class="header-subtitle">Phase 3: Student System + Issue/Return</p>
+        
+        <div class="nav-tabs" style="display: flex; gap: 10px; margin-bottom: 30px; border-bottom: 2px solid #e0e0e0; flex-wrap: wrap;">
+            <a href="{% url 'myapp:book_list' %}" style="padding: 10px 20px; color: #667eea; border-bottom: 3px solid #667eea; text-decoration: none; font-weight: 500;">📚 Books</a>
+            <a href="{% url 'myapp:student_list' %}" style="padding: 10px 20px; color: #666; border-bottom: 3px solid transparent; text-decoration: none; font-weight: 500; transition: all 0.3s;">👥 Students</a>
+            <a href="{% url 'myapp:issued_books_list' %}" style="padding: 10px 20px; color: #666; border-bottom: 3px solid transparent; text-decoration: none; font-weight: 500; transition: all 0.3s;">📖 Issued Books</a>
+        </div>
+        
+        <div class="add-book-section">
+            <a href="{% url 'myapp:create_book' %}" class="btn-add">+ Add New Book</a>
+        </div>
+        
+        <div class="stats">
+            <div class="stat-card">
+                <h3>{{ total_books }}</h3>
+                <p>Total Books</p>
+            </div>
+            <div class="stat-card">
+                <h3>{{ available_books }}</h3>
+                <p>Available Books</p>
+            </div>
+        </div>
+        
+        {% if books %}
+            <div class="books-grid">
+                {% for book in books %}
+                    <div class="book-card">
+                        <div class="book-title">{{ book.title }}</div>
+                        <div class="book-detail">
+                            <strong>Author:</strong> {{ book.author }}
+                        </div>
+                        <div class="book-detail">
+                            <strong>ISBN:</strong> {{ book.isbn }}
+                        </div>
+                        <div class="book-detail">
+                            <strong>Quantity:</strong> {{ book.quantity }}
+                        </div>
+                        <div class="availability {% if book.quantity > 0 %}available{% else %}unavailable{% endif %}">
+                            {% if book.quantity > 0 %}
+                                ✓ Available ({{ book.quantity }} in stock)
+                            {% else %}
+                                ✗ Unavailable (Out of stock)
+                            {% endif %}
+                        </div>
+                        <div class="book-actions">
+                            <a href="{% url 'myapp:edit_book' book.id %}" class="btn-edit">✏️ Edit</a>
+                            <a href="{% url 'myapp:delete_book' book.id %}" class="btn-delete">🗑️ Delete</a>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="no-books">
+                <p>No books available in the library yet.</p>
+                <p><a href="{% url 'myapp:create_book' %}" style="color: #667eea;">Create the first book</a></p>
+            </div>
+        {% endif %}
+        
+        <div class="admin-section">
+            <p>🔐 Admin Access:</p>
+            <a href="/admin/" class="admin-link">Go to Admin Panel</a>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Phase 4 Instructions – Authentication &amp; User Onboarding</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+            color: #131a2b;
+            background: #f3f5fb;
+        }
+        header {
+            background: #12274a;
+            color: #fff;
+            padding: 36px 22px;
+        }
+        header h1 { margin: 0 0 12px 0; }
+        main {
+            max-width: 1080px;
+            margin: 28px auto 70px;
+            padding: 0 22px;
+        }
+        section {
+            background: #fff;
+            border-radius: 12px;
+            margin-bottom: 22px;
+            padding: 28px 32px;
+            box-shadow: 0 8px 26px rgba(18, 39, 74, 0.1);
+        }
+        h2 { color: #12274a; margin-top: 0; }
+        h3 { color: #1f3a6d; margin-bottom: 8px; }
+        pre {
+            background: #0f172a;
+            color: #e2e8f0;
+            padding: 13px 15px;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-size: 14px;
+        }
+        ul { padding-left: 22px; }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+            gap: 16px;
+        }
+        .grid div {
+            background: #e7edff;
+            padding: 16px;
+            border-radius: 10px;
+        }
+        .callout {
+            border-left: 4px solid #00b4d8;
+            background: #e6fbff;
+            padding: 14px 18px;
+            border-radius: 8px;
+            margin: 18px 0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 18px 0;
+        }
+        th, td {
+            border: 1px solid #d8e0f9;
+            padding: 10px 12px;
+            text-align: left;
+        }
+        th { background: #eef2ff; color: #1f3a6d; }
+        footer {
+            text-align: center;
+            padding: 34px 20px 44px;
+            color: #5c6689;
+        }
+    </style>
+</head>
+<body>
+<header>
+    <h1>Phase 4 – Authentication &amp; User Approval Pipeline</h1>
+    <p>
+        After building core CRUD and circulation in Phases 1–3, Phase 4 introduces user accounts:
+        registration, login/logout, role selection, and an approval queue that keeps new users inactive
+        until an admin reviews them. These instructions unravel every moving part so students understand
+        how authentication integrates with the existing data model.
+    </p>
+</header>
+<main>
+    <section id="backend-foundations" style="background: #fff; border-radius: 12px; margin-bottom: 22px; padding: 28px 32px; box-shadow: 0 8px 26px rgba(18, 39, 74, 0.1);">
+        <h2 style="color: #12274a; margin-top: 0; font-size: 2em;">🎓 Phase 4 Backend Foundations – Authentication & State Machines</h2>
+        <p style="font-size: 1.05em; max-width: 900px; line-height: 1.8;">
+            <strong>What's New in Phase 4:</strong> Phases 1–3 had no user concept — anyone accessing the site did everything. 
+            Phase 4 introduces <strong>identity and access control</strong>. Django's built-in User model handles login/password security. 
+            The UserApproval model creates a state machine: New users start Pending → Admin approves/rejects → Active users get access. 
+            You'll learn how sessions maintain login state, how decorators protect views, and how to tie users to business logic (students).
+        </p>
+    </section>
+
+    <section id="concept-boxes" style="background: #fff; border-radius: 12px; margin-bottom: 22px; padding: 28px 32px; box-shadow: 0 8px 26px rgba(18, 39, 74, 0.1);">
+        <h2 style="color: #12274a; margin-top: 0;">Core Backend Concepts</h2>
+
+        <div style="border-left: 5px solid #3d5af1; background: #e7ecff; padding: 16px 20px; border-radius: 8px; margin: 18px 0;">
+            <h4 style="color: #1f3a6d; margin-top: 0;">1. Django's Built-in User Model</h4>
+            <p><strong>Why not build our own?</strong> Security is hard. Django's User model handles password hashing, permissions, and best practices.</p>
+            <pre style="background: #0f172a; color: #e2e8f0; padding: 16px 18px; border-radius: 6px; overflow-x: auto; font-size: 14px; line-height: 1.5;">
+from django.contrib.auth.models import User
+
+# Django provides User with:
+# - username (unique)
+# - password (hashed, never stored plain-text)
+# - email, first_name, last_name
+# - is_active (boolean flag)
+# - is_staff (can access admin)
+# - is_superuser (full permissions)
+            </pre>
+            <p><strong>Key Fields:</strong> is_active=False for pending users, is_staff=True for librarians, is_superuser=True for admins</p>
+        </div>
+
+        <div style="border-left: 5px solid #3d5af1; background: #e7ecff; padding: 16px 20px; border-radius: 8px; margin: 18px 0;">
+            <h4 style="color: #1f3a6d; margin-top: 0;">2. Password Hashing – Never Store Plain Text</h4>
+            <p><strong>The Rule:</strong> Store hashed passwords, never plain-text. Always use Django's hashing.</p>
+            <pre style="background: #0f172a; color: #e2e8f0; padding: 16px 18px; border-radius: 6px; overflow-x: auto; font-size: 14px; line-height: 1.5;">
+# Use set_password() method
+user.set_password('mypassword')
+user.save()
+            </pre>
+        </div>
+
+        <div style="border-left: 5px solid #3d5af1; background: #e7ecff; padding: 16px 20px; border-radius: 8px; margin: 18px 0;">
+            <h4 style="color: #1f3a6d; margin-top: 0;">3. Sessions – Keeping Users Logged In</h4>
+            <p><strong>How login state persists:</strong> Django creates session ID (random string) → stored in browser cookie → sent with every request → server looks up user</p>
+            <pre style="background: #0f172a; color: #e2e8f0; padding: 16px 18px; border-radius: 6px; overflow-x: auto; font-size: 14px; line-height: 1.5;">
+from django.contrib.auth import authenticate, login, logout
+
+user = authenticate(username=username, password=password)
+if user:
+    login(request, user)  # Creates session
+
+# On every request: request.user contains logged-in user
+# On logout: logout(request) deletes session
+            </pre>
+        </div>
+
+        <div style="border-left: 5px solid #3d5af1; background: #e7ecff; padding: 16px 20px; border-radius: 8px; margin: 18px 0;">
+            <h4 style="color: #1f3a6d; margin-top: 0;">4. @login_required – Protecting Views</h4>
+            <p><strong>Only logged-in users can access certain views. Unauthenticated users redirect to login.</strong></p>
+            <pre style="background: #0f172a; color: #e2e8f0; padding: 16px 18px; border-radius: 6px; overflow-x: auto; font-size: 14px; line-height: 1.5;">
+from django.contrib.auth.decorators import login_required
+
+@login_required
+def issue_book(request):
+    # Only logged-in users reach here
+    # Unauthenticated → redirects to /login/?next=/issue-book/
+            </pre>
+        </div>
+
+        <div style="border-left: 5px solid #3d5af1; background: #e7ecff; padding: 16px 20px; border-radius: 8px; margin: 18px 0;">
+            <h4 style="color: #1f3a6d; margin-top: 0;">5. The UserApproval State Machine</h4>
+            <p><strong>New users start inactive → Admin approves → User becomes active.</strong></p>
+            <p><strong>States:</strong> Pending → Approved (or Rejected)</p>
+        </div>
+
+        <div style="border-left: 5px solid #3d5af1; background: #e7ecff; padding: 16px 20px; border-radius: 8px; margin: 18px 0;">
+            <h4 style="color: #1f3a6d; margin-top: 0;">6. Role-Based Access Control (RBAC)</h4>
+            <p><strong>Different users see/do different things based on role.</strong></p>
+            <pre style="background: #0f172a; color: #e2e8f0; padding: 16px 18px; border-radius: 6px; overflow-x: auto; font-size: 14px; line-height: 1.5;">
+if not request.user.is_staff:
+    return HttpResponseForbidden("Only admins")
+
+# Roles: Admin (is_superuser), Librarian (is_staff), Student (regular user)
+            </pre>
+        </div>
+
+        <div style="border-left: 5px solid #3d5af1; background: #e7ecff; padding: 16px 20px; border-radius: 8px; margin: 18px 0;">
+            <h4 style="color: #1f3a6d; margin-top: 0;">7. Registration Form – Creating Users Securely</h4>
+            <p><strong>User registration requires password validation, confirmation, and hashing. New users always start is_active=False.</strong></p>
+        </div>
+
+        <div style="border-left: 5px solid #3d5af1; background: #e7ecff; padding: 16px 20px; border-radius: 8px; margin: 18px 0;">
+            <h4 style="color: #1f3a6d; margin-top: 0;">8. Login Flow – Authentication Process</h4>
+            <p><strong>User enters credentials → Django hashes entered password → Compares with stored hash → Creates session if match</strong></p>
+        </div>
+
+        <div style="border-left: 5px solid #3d5af1; background: #e7ecff; padding: 16px 20px; border-radius: 8px; margin: 18px 0;">
+            <h4 style="color: #1f3a6d; margin-top: 0;">9. Tying Users to Business Objects</h4>
+            <p><strong>Link User account to Student record so views know which student a user represents.</strong></p>
+            <pre style="background: #0f172a; color: #e2e8f0; padding: 16px 18px; border-radius: 6px; overflow-x: auto; font-size: 14px; line-height: 1.5;">
+# OneToOne relationship
+class Student(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, null=True)
+
+# Access: user.student or student.user
+            </pre>
+        </div>
+
+        <div style="border-left: 5px solid #3d5af1; background: #e7ecff; padding: 16px 20px; border-radius: 8px; margin: 18px 0;">
+            <h4 style="color: #1f3a6d; margin-top: 0;">10. Audit Trail – Tracking Approvals</h4>
+            <p><strong>Record who approved whom and when for accountability and compliance. Store approved_by, approval_date, rejection_reason.</strong></p>
+        </div>
+    </section>
+
+    <section id="objectives">
+        <h2>Learning Goals</h2>
+        <div class="grid">
+            <div>
+                <h3>Django Auth Basics</h3>
+                <ul>
+                    <li>Leverage Django’s built-in `User` model.</li>
+                    <li>Use `authenticate`, `login`, and `logout` APIs.</li>
+                    <li>Protect views with `@login_required` decorators.</li>
+                </ul>
+            </div>
+            <div>
+                <h3>Custom Onboarding Flow</h3>
+                <ul>
+                    <li>Create `RegistrationForm` with password confirmation.</li>
+                    <li>Store role &amp; status in a companion model (`UserApproval`).</li>
+                    <li>Keep users inactive until approved.</li>
+                </ul>
+            </div>
+            <div>
+                <h3>User Experience</h3>
+                <ul>
+                    <li>Use Django messages to guide users.</li>
+                    <li>Redirect authenticated users away from auth pages.</li>
+                    <li>Provide detailed instruction screens for pending approval.</li>
+                </ul>
+            </div>
+            <div>
+                <h3>Security Practices</h3>
+                <ul>
+                    <li>Prevent duplicate usernames/emails.</li>
+                    <li>Validate password strength and matching.</li>
+                    <li>Respect `is_active` and `is_staff` flags.</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <section id="architecture" style="background: #fff; border-radius: 12px; margin-bottom: 22px; padding: 28px 32px; box-shadow: 0 8px 26px rgba(18, 39, 74, 0.1);">
+        <h2 style="color: #12274a; margin-top: 0;">Phase 4 Authentication Flow</h2>
+
+        <h3 style="color: #1f3a6d; margin-bottom: 8px;">Registration Flow</h3>
+        <pre style="background: #0f172a; color: #e2e8f0; padding: 16px 18px; border-radius: 6px; overflow-x: auto; font-size: 14px; line-height: 1.5;">
+User visits /register/
+↓
+GET /register/ renders registration form
+↓
+User fills: username, email, password, password_confirm, role
+↓
+User submits form (POST /register/)
+↓
+Form validates: passwords match? username unique? email unique?
+↓ (if valid)
+User created with is_active=False (inactive, can't login yet)
+↓
+UserApproval created with status='pending'
+↓
+Redirect to "Application Submitted" page
+↓
+Admin reviews pending users in admin panel
+        </pre>
+
+        <h3 style="color: #1f3a6d; margin-bottom: 8px;">Approval Flow</h3>
+        <pre style="background: #0f172a; color: #e2e8f0; padding: 16px 18px; border-radius: 6px; overflow-x: auto; font-size: 14px; line-height: 1.5;">
+Admin visits /admin/approve-users/
+↓
+Lists all pending UserApproval records
+↓
+Admin clicks "Approve" on a user
+↓
+POST /admin/users/{id}/approve/
+↓
+UserApproval.status = 'approved'
+↓
+UserApproval.approved_by = request.user (who approved)
+↓
+UserApproval.approval_date = now()
+↓
+User.is_active = True (now can login!)
+↓
+All saved
+↓
+Email notification sent to new user (optional)
+        </pre>
+
+        <h3 style="color: #1f3a6d; margin-bottom: 8px;">Login Flow</h3>
+        <pre style="background: #0f172a; color: #e2e8f0; padding: 16px 18px; border-radius: 6px; overflow-x: auto; font-size: 14px; line-height: 1.5;">
+User visits /login/
+↓
+GET /login/ renders login form
+↓
+User enters username and password
+↓
+POST /login/
+↓
+Django calls authenticate(username, password)
+↓
+Django hashes entered password and compares with stored hash
+↓ (if match and user.is_active=True)
+login(request, user)  ← Creates session
+↓
+Redirect to /dashboard/ with success message
+↓
+Every request now includes session ID in cookie
+↓
+request.user contains logged-in user
+        </pre>
+
+        <h3 style="color: #1f3a6d; margin-bottom: 8px;">High-Level Changes Compared to Phase 3</h3>
+        <table style="width: 100%; border-collapse: collapse; margin: 18px 0;">
+            <thead>
+            <tr style="background: #eef2ff;">
+                <th style="border: 1px solid #d8e0f9; padding: 10px 12px; text-align: left; color: #1f3a6d;">Component</th>
+                <th style="border: 1px solid #d8e0f9; padding: 10px 12px; text-align: left; color: #1f3a6d;">Phase 3</th>
+                <th style="border: 1px solid #d8e0f9; padding: 10px 12px; text-align: left; color: #1f3a6d;">Phase 4 (New)</th>
+                <th style="border: 1px solid #d8e0f9; padding: 10px 12px; text-align: left; color: #1f3a6d;">Backend Concept</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td style="border: 1px solid #d8e0f9; padding: 10px 12px;">Authentication</td>
+                <td style="border: 1px solid #d8e0f9; padding: 10px 12px;">None (no users)</td>
+                <td style="border: 1px solid #d8e0f9; padding: 10px 12px;">User model, login/logout</td>
+                <td style="border: 1px solid #d8e0f9; padding: 10px 12px;">Sessions, password hashing, @login_required</td>
+            </tr>
+            <tr style="background: #f9fafb;">
+                <td style="border: 1px solid #d8e0f9; padding: 10px 12px;">Authorization</td>
+                <td style="border: 1px solid #d8e0f9; padding: 10px 12px;">All access equal</td>
+                <td style="border: 1px solid #d8e0f9; padding: 10px 12px;">Roles (Student, Librarian), approval workflow</td>
+                <td style="border: 1px solid #d8e0f9; padding: 10px 12px;">RBAC, state machine, is_active/is_staff</td>
+            </tr>
+            <tr>
+                <td style="border: 1px solid #d8e0f9; padding: 10px 12px;">UserApproval Model</td>
+                <td style="border: 1px solid #d8e0f9; padding: 10px 12px;">N/A</td>
+                <td style="border: 1px solid #d8e0f9; padding: 10px 12px;">Track pending/approved/rejected</td>
+                <td style="border: 1px solid #d8e0f9; padding: 10px 12px;">State machine, audit trail (approved_by, approval_date)</td>
+            </tr>
+            <tr style="background: #f9fafb;">
+                <td style="border: 1px solid #d8e0f9; padding: 10px 12px;">Forms</td>
+                <td style="border: 1px solid #d8e0f9; padding: 10px 12px;">Book, Student, IssuedBook</td>
+                <td style="border: 1px solid #d8e0f9; padding: 10px 12px;">+ RegistrationForm, LoginForm</td>
+                <td style="border: 1px solid #d8e0f9; padding: 10px 12px;">Password confirmation, user uniqueness, error messages</td>
+            </tr>
+            <tr>
+                <td style="border: 1px solid #d8e0f9; padding: 10px 12px;">Views</td>
+                <td style="border: 1px solid #d8e0f9; padding: 10px 12px;">No auth checks</td>
+                <td style="border: 1px solid #d8e0f9; padding: 10px 12px;">@login_required, role checks, approval dashboard</td>
+                <td style="border: 1px solid #d8e0f9; padding: 10px 12px;">Access control, decorators, role-based logic</td>
+            </tr>
+            </tbody>
+        </table>
+    </section>
+
+    <section id="models">
+        <h2>Model Enhancements (`myapp/models.py`)</h2>
+        <h3>UserApproval</h3>
+        <pre>
+class UserApproval(models.Model):
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('approved', 'Approved'),
+        ('rejected', 'Rejected'),
+    ]
+
+    ROLE_CHOICES = [
+        ('student', 'Student'),
+        ('librarian', 'Librarian'),
+    ]
+
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='approval_record')
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='student')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    approved_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='approvals_given'
+    )
+    approval_date = models.DateTimeField(null=True, blank=True)
+    rejection_reason = models.TextField(blank=True, default='')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.user.username} ({self.role}) - {self.status}"
+
+    class Meta:
+        ordering = ['-created_at']</pre>
+        <p>
+            This model stores each user’s requested role, approval status, and audit data about who processed the request.
+        </p>
+        <div class="callout">
+            <strong>Migration reminder:</strong> run `python manage.py makemigrations myapp` and `python manage.py migrate`
+            after adding `UserApproval`.
+        </div>
+    </section>
+
+    <section id="forms">
+        <h2>Registration Form (`myapp/forms.py`)</h2>
+        <pre>
+class RegistrationForm(forms.Form):
+    username = forms.CharField(...)
+    email = forms.EmailField(...)
+    password1 = forms.CharField(label='Password', widget=forms.PasswordInput(...))
+    password2 = forms.CharField(label='Confirm Password', widget=forms.PasswordInput(...))
+    role = forms.ChoiceField(
+        choices=[('student', 'Student'), ('librarian', 'Librarian')],
+        initial='student',
+        widget=forms.RadioSelect()
+    )
+
+    def clean_username(self):
+        username = self.cleaned_data.get('username')
+        if User.objects.filter(username=username).exists():
+            raise forms.ValidationError("Username already exists. Please choose another.")
+        return username
+
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        if User.objects.filter(email=email).exists():
+            raise forms.ValidationError("Email already registered. Please use another.")
+        return email
+
+    def clean(self):
+        cleaned_data = super().clean()
+        password1 = cleaned_data.get('password1')
+        password2 = cleaned_data.get('password2')
+
+        if password1 and password2:
+            if password1 != password2:
+                raise forms.ValidationError("Passwords do not match. Please try again.")
+            if len(password1) &lt; 8:
+                raise forms.ValidationError("Password must be at least 8 characters long.")
+        return cleaned_data</pre>
+        <p>Emphasize how form validation ensures data integrity before any user is created.</p>
+    </section>
+
+    <section id="views">
+        <h2>Authentication Views (`myapp/views.py`)</h2>
+
+        <h3>Register</h3>
+        <pre>
+def register(request):
+    if request.user.is_authenticated:
+        return redirect('myapp:home')
+
+    if request.method == 'POST':
+        form = RegistrationForm(request.POST)
+        if form.is_valid():
+            username = form.cleaned_data.get('username')
+            email = form.cleaned_data.get('email')
+            password = form.cleaned_data.get('password1')
+            role = form.cleaned_data.get('role')
+
+            user = User.objects.create_user(
+                username=username,
+                email=email,
+                password=password,
+                is_active=False  # pending approval
+            )
+
+            UserApproval.objects.create(user=user, role=role)
+
+            if role == 'librarian':
+                user.is_staff = False  # will be True once approved
+            user.save()
+
+            messages.success(request, "Account created successfully! Please wait for admin approval.")
+            return redirect('myapp:login')
+        else:
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f"{field}: {error}")
+    else:
+        form = RegistrationForm()
+
+    return render(request, 'myapp/register.html', {'form': form})</pre>
+        <p>
+            Key teaching points: preventing logged-in users from re-registering, custom messaging, and creating
+            inactive accounts plus approval records simultaneously.
+        </p>
+
+        <h3>Login</h3>
+        <pre>
+def login_view(request):
+    if request.user.is_authenticated:
+        return redirect('myapp:home')
+
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+
+        user = authenticate(request, username=username, password=password)
+
+        if user is not None:
+            if not user.is_active:
+                messages.error(request, "Your account is pending admin approval. Please wait.")
+                return redirect('myapp:login')
+
+            login(request, user)
+            messages.success(request, f"Welcome back, {user.username}!")
+            return redirect('myapp:home')
+        else:
+            messages.error(request, "Invalid username or password!")
+
+    return render(request, 'myapp/login.html')</pre>
+        <p>
+            Show how to guard against inactive users logging in, and how to reuse `messages` for feedback.
+        </p>
+
+        <h3>Logout</h3>
+        <pre>
+def logout_view(request):
+    logout(request)
+    messages.success(request, "You have been logged out successfully!")
+    return redirect('myapp:login')</pre>
+        <p>Simple view that clears the session and redirects to login.</p>
+
+        <h3>Home Redirect</h3>
+        <pre>
+@login_required(login_url='myapp:login')
+def home(request):
+    if request.user.is_superuser:
+        return redirect('myapp:admin_dashboard')
+    elif request.user.is_staff:
+        return redirect('myapp:librarian_dashboard')
+    else:
+        return redirect('myapp:student_dashboard')</pre>
+        <p>Even though dashboards are Phase 5, Phase 4 introduces the role-based redirect logic to prepare students.</p>
+    </section>
+
+    <section id="templates">
+        <h2>Template Expectations</h2>
+        <ul>
+            <li><code>templates/myapp/login.html</code> – Includes username/password fields, error display, and links to registration.</li>
+            <li><code>templates/myapp/register.html</code> – Renders `RegistrationForm`, includes radio buttons for role selection, and highlights instructions about admin approval.</li>
+            <li>Both templates extend the same base styling as earlier phases for consistency.</li>
+            <li>Messages block (e.g., `{% if messages %}`) should appear in the base template to show success/error notices.</li>
+        </ul>
+    </section>
+
+    <section id="urls">
+        <h2>URL Registration (`myapp/urls.py`)</h2>
+        <pre>
+urlpatterns = [
+    path('', views.home, name='home'),
+    path('register/', views.register, name='register'),
+    path('login/', views.login_view, name='login'),
+    path('logout/', views.logout_view, name='logout'),
+    # Phase 5 URLs follow later for dashboards/approvals
+]</pre>
+        <p>Discuss why naming routes (`myapp:login`) is essential for redirects, decorators, and template links.</p>
+    </section>
+
+    <section id="messages">
+        <h2>Using Django Messages</h2>
+        <pre>
+from django.contrib import messages
+
+messages.success(request, "Account created successfully!")
+messages.error(request, "Invalid username or password!")
+messages.warning(request, "This user has already been processed!")</pre>
+        <p>
+            Teach students to configure message display in the base template so alerts appear consistently.
+        </p>
+    </section>
+
+    <section id="testing">
+        <h2>Testing Checklist</h2>
+        <ol>
+            <li>Attempt to register with mismatched passwords → expect validation error.</li>
+            <li>Register duplicate username/email → confirm form prevents it.</li>
+            <li>Register a new student; verify `User.is_active=False` and `UserApproval.status='pending'`.</li>
+            <li>Try logging in before approval → receive “pending” message.</li>
+            <li>In Django admin, set `is_active=True` and `is_staff=True` (for librarians) to simulate approval; log in again to confirm success.</li>
+            <li>Check that authenticated users visiting `/login` or `/register` redirect back to `home`.</li>
+        </ol>
+    </section>
+
+    <section id="commands">
+        <h2>Terminal Commands</h2>
+        <pre>
+# Apply migrations for UserApproval
+python manage.py makemigrations myapp
+python manage.py migrate
+
+# Create a superuser to approve registrations
+python manage.py createsuperuser
+
+# Run development server
+python manage.py runserver
+        </pre>
+    </section>
+
+    <section id="teaching-tips">
+        <h2>Instructor Tips</h2>
+        <ul>
+            <li>Demonstrate session management by opening multiple tabs and logging out.</li>
+            <li>Discuss potential extensions such as email notifications upon approval.</li>
+            <li>Encourage students to connect `User` objects to `Student` profiles (to be fleshed out in Phase 5 or beyond).</li>
+            <li>Preview how `@login_required` and role checks will guard CRUD operations in later phases.</li>
+        </ul>
+    </section>
+
+    <section id="key-takeaways" style="background: #fff; border-radius: 12px; margin-bottom: 22px; padding: 28px 32px; box-shadow: 0 8px 26px rgba(18, 39, 74, 0.1);">
+        <h2 style="color: #12274a; margin-top: 0;">Phase 4 Key Takeaways</h2>
+        <div style="border-left: 5px solid #3d5af1; background: #e7ecff; padding: 16px 20px; border-radius: 8px; margin: 18px 0;">
+            <p><strong>✓ Django User Model:</strong> Use built-in User for passwords, permissions, is_active flag. Never reinvent authentication.</p>
+        </div>
+        <div style="border-left: 5px solid #3d5af1; background: #e7ecff; padding: 16px 20px; border-radius: 8px; margin: 18px 0;">
+            <p><strong>✓ Password Hashing:</strong> Always use set_password(). Stored passwords are one-way hashes, never plain-text.</p>
+        </div>
+        <div style="border-left: 5px solid #3d5af1; background: #e7ecff; padding: 16px 20px; border-radius: 8px; margin: 18px 0;">
+            <p><strong>✓ Sessions:</strong> After login(), Django creates session ID → stored in browser cookie → sent with every request → server looks up user.</p>
+        </div>
+        <div style="border-left: 5px solid #3d5af1; background: #e7ecff; padding: 16px 20px; border-radius: 8px; margin: 18px 0;">
+            <p><strong>✓ @login_required:</strong> Decorator to protect views. Unauthenticated users redirect to login with next= parameter.</p>
+        </div>
+        <div style="border-left: 5px solid #3d5af1; background: #e7ecff; padding: 16px 20px; border-radius: 8px; margin: 18px 0;">
+            <p><strong>✓ State Machine (UserApproval):</strong> Pending → Approved/Rejected. New users inactive until admin approves.</p>
+        </div>
+        <div style="border-left: 5px solid #3d5af1; background: #e7ecff; padding: 16px 20px; border-radius: 8px; margin: 18px 0;">
+            <p><strong>✓ Role-Based Access:</strong> Check is_staff, is_superuser, or UserApproval.role to enforce business rules.</p>
+        </div>
+        <div style="border-left: 5px solid #3d5af1; background: #e7ecff; padding: 16px 20px; border-radius: 8px; margin: 18px 0;">
+            <p><strong>✓ Audit Trail:</strong> Record approved_by and approval_date for compliance and accountability.</p>
+        </div>
+        <div style="border-left: 5px solid #3d5af1; background: #e7ecff; padding: 16px 20px; border-radius: 8px; margin: 18px 0;">
+            <p><strong>✓ OneToOne User-Student:</strong> Link User account to Student record so views know which student a user represents.</p>
+        </div>
+        <div style="border-left: 5px solid #3d5af1; background: #e7ecff; padding: 16px 20px; border-radius: 8px; margin: 18px 0;">
+            <p><strong>✓ Registration Security:</strong> Validate password strength, confirm matching, enforce unique usernames.</p>
+        </div>
+        <div style="border-left: 5px solid #3d5af1; background: #e7ecff; padding: 16px 20px; border-radius: 8px; margin: 18px 0;">
+            <p><strong>✓ is_active Flag:</strong> New users is_active=False (can't login). Admin sets True after approval.</p>
+        </div>
+    </section>
+</main>
+<footer>
+    <h3>Phase 4 Complete! 🎉</h3>
+    <p>You've mastered user authentication, sessions, password security, role-based access control, and approval workflows.</p>
+    <p>Your library system now has identity and access control. New users must be approved before gaining access.</p>
+    <p><strong>Next:</strong> Phase 5 – Role-based dashboards, permission enforcement, and admin panels!</p>
+</footer>
+</body>
+</html>
+

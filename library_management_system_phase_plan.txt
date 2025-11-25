@@ -1,0 +1,190 @@
+
+# ⭐ **Library Management System PHASE PLAN**
+
+---
+
+# **PHASE 1 — Basic Setup & Book Display (2 hours)**
+
+### 🎯 Goal:
+
+Setup the project, connect to XAMPP MySQL, and display books.
+
+### **Tasks:**
+
+1. Create Django project & app
+2. Connect Django to XAMPP MySQL
+3. Create **Book model** (title, author, ISBN, quantity)
+4. Apply migrations → create MySQL tables
+5. Add sample books manually
+6. Create a simple page to **display all books**
+
+### ✔ Output:
+
+* Project running
+* Database connected
+* Book list page working
+
+---
+
+# **PHASE 2 — Full Book Management (2–3 hours)**
+
+### 🎯 Goal:
+
+Implement CRUD for books + availability tracking.
+
+### **Tasks:**
+
+1. Add page to **create new book**
+2. Add page to **edit book**
+3. Add page to **delete book**
+4. Display “Available / Unavailable” based on quantity
+5. Add buttons on book list: Edit | Delete
+
+### ✔ Output:
+
+* Full book management system
+* Working CRUD
+* Availability status visible
+
+---
+
+# **PHASE 3 — Student System + Issue/Return System (2–3 hours)**
+
+### 🎯 Goal:
+
+Add students and borrowing/return functionality.
+
+### **Tasks:**
+
+1. Create **Student model** (name, roll, class, department, user link)
+2. Implement **student CRUD** (admin/librarian only)
+3. Implement **Issue Book system**
+
+   * Select book
+   * Select student
+   * Save issue date
+   * Reduce book quantity automatically
+4. Implement **Return Book system**
+
+   * Update return date
+   * Increase quantity automatically
+5. Create **Issued Books List** for admin/librarian
+
+### ✔ Output:
+
+* Students added
+* Admin/Librarian can issue & return books
+* Book quantities auto-adjust
+
+---
+
+# **PHASE 4 — Authentication & Role-Based System (1.5 hours)**
+
+### 🎯 Goal:
+
+Separate login for **Librarian/Admin** and **Students** with role-based dashboards.
+
+### **Tasks:**
+
+1. Use Django **User model** with two roles:
+
+   * Librarian/Admin (staff)
+   * Student (normal user)
+2. Add **login page** + logout
+3. Redirect users after login based on role:
+
+   * Librarian → Librarian Dashboard
+   * Student → Student Dashboard
+4. Protect pages:
+
+   * Only librarians can access book/student management and issue/return
+   * Students can only access their own dashboard
+
+### ✔ Output:
+
+* Multi-role login system
+* Secure dashboards
+* Students cannot access admin features
+
+---
+
+# **PHASE 5 — Student Dashboard + Borrow History (2 hours)**
+
+### 🎯 Goal:
+
+Allow students to see their info, borrowed books, borrow history, and all library books.
+
+### **Tasks:**
+
+1. **Student Dashboard Sections**:
+
+   * Personal Info (name, roll, class, dept)
+   * Currently Borrowed Books (active borrowings)
+   * Borrow History (all past borrowings, returned and active)
+2. **All Books Section**:
+
+   * Show **all books** in library
+   * Columns: Title, Author, ISBN, Quantity, Status (Available / Unavailable)
+   * Add **filter**: Show All / Available Only / Unavailable Only
+3. Optional:
+
+   * Notifications: overdue books, recent borrowings
+   * Request return button for borrowed books
+
+### ✔ Output:
+
+* Students see personal info
+* Active borrowed books clearly visible
+* Full borrow history available
+* Can view/filter all books in the library
+
+---
+
+# **PHASE 6 — UI Polishing + Extra Features (1–2 hours)**
+
+### 🎯 Goal:
+
+Make the system professional and visually appealing.
+
+### **Tasks:**
+
+1. Add **Bootstrap / Tailwind** styling
+2. Create **clean layouts** for both dashboards
+3. Add **search functionality**:
+
+   * Search books by title, author, ISBN
+   * Search students by name, roll (admin only)
+4. Add **dashboard statistics** (librarian):
+
+   * Total books
+   * Total students
+   * Currently issued books
+   * Overdue books
+5. Add **filters** on history and all books pages
+
+### ✔ Output:
+
+* Modern UI
+* Professional dashboards
+* Ready for submission and presentation
+
+---
+
+# 🎉 **FINAL RESULT**
+
+### **Librarian/Admin Features**
+
+* Manage books (CRUD)
+* Manage students (CRUD)
+* Issue & return books
+* View all borrow history
+* Full dashboard with statistics
+* Role-based secure login
+
+### **Student Features**
+
+* Personal dashboard
+* View currently borrowed books
+* View full borrow history
+* View **all library books**
+* Filter books by availability

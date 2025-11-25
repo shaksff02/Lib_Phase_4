@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ student.name }} - Student Detail</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+        }
+        
+        .back-link {
+            display: inline-block;
+            margin-bottom: 30px;
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .back-link:hover {
+            text-decoration: underline;
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 30px;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        
+        h1 {
+            color: #333;
+            font-size: 2em;
+        }
+        
+        .student-info-box {
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .info-row {
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .info-label {
+            font-weight: 600;
+            color: #333;
+            min-width: 120px;
+        }
+        
+        .info-value {
+            color: #666;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            font-size: 0.95em;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-edit {
+            background: #ffc107;
+            color: #333;
+        }
+        
+        .btn-edit:hover {
+            background: #ffb300;
+            transform: translateY(-2px);
+        }
+        
+        .btn-delete {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .btn-delete:hover {
+            background: #c82333;
+            transform: translateY(-2px);
+        }
+        
+        h2 {
+            color: #333;
+            font-size: 1.3em;
+            margin-top: 40px;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .stat-card h3 {
+            font-size: 1.8em;
+            margin-bottom: 5px;
+        }
+        
+        .stat-card p {
+            font-size: 0.85em;
+            opacity: 0.9;
+        }
+        
+        .no-books {
+            text-align: center;
+            color: #999;
+            padding: 30px 20px;
+            background: #f9f9f9;
+            border-radius: 8px;
+            font-size: 1em;
+        }
+        
+        .books-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        .books-table thead {
+            background: #f9f9f9;
+        }
+        
+        .books-table th {
+            padding: 12px;
+            text-align: left;
+            color: #333;
+            font-weight: 600;
+            border-bottom: 2px solid #e0e0e0;
+            font-size: 0.9em;
+        }
+        
+        .books-table td {
+            padding: 12px;
+            border-bottom: 1px solid #f0f0f0;
+            color: #555;
+            font-size: 0.9em;
+        }
+        
+        .books-table tbody tr:hover {
+            background: #f9f9f9;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+        
+        .status-active {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status-returned {
+            background: #e2e3e5;
+            color: #383d41;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="{% url 'myapp:student_list' %}" class="back-link">← Back to Students</a>
+        
+        <div class="header">
+            <div>
+                <h1>👥 {{ student.name }}</h1>
+            </div>
+            <div class="action-buttons">
+                <a href="{% url 'myapp:edit_student' student.id %}" class="btn btn-edit">✏️ Edit</a>
+                <a href="{% url 'myapp:delete_student' student.id %}" class="btn btn-delete">🗑️ Delete</a>
+            </div>
+        </div>
+        
+        <div class="student-info-box">
+            <div class="info-row">
+                <span class="info-label">ID Number:</span>
+                <span class="info-value">{{ student.id_number }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Department:</span>
+                <span class="info-value">{{ student.get_department_display }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Phone Number:</span>
+                <span class="info-value">{{ student.phone_number }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Joined:</span>
+                <span class="info-value">{{ student.created_at|date:"d M Y" }}</span>
+            </div>
+        </div>
+        
+        <h2>📖 Borrowed Books Status</h2>
+        
+        <div class="stats">
+            <div class="stat-card">
+                <h3>{{ total_borrowed }}</h3>
+                <p>Currently Borrowed</p>
+            </div>
+            <div class="stat-card">
+                <h3>{{ issued_books|length }}</h3>
+                <p>Total Transactions</p>
+            </div>
+        </div>
+        
+        {% if active_issues %}
+            <h3 style="color: #333; margin-bottom: 15px;">Currently Borrowed ({{ active_issues|length }})</h3>
+            <table class="books-table">
+                <thead>
+                    <tr>
+                        <th>Book Title</th>
+                        <th>Author</th>
+                        <th>Quantity</th>
+                        <th>Issue Date</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for issue in active_issues %}
+                        <tr>
+                            <td>{{ issue.book.title }}</td>
+                            <td>{{ issue.book.author }}</td>
+                            <td>{{ issue.quantity }}</td>
+                            <td>{{ issue.issue_date|date:"d M Y" }}</td>
+                            <td><span class="status-badge status-active">Active</span></td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <div class="no-books">
+                <p>No books currently borrowed.</p>
+            </div>
+        {% endif %}
+        
+        {% if issued_books %}
+            <h2>📚 Full Borrowing History</h2>
+            <table class="books-table">
+                <thead>
+                    <tr>
+                        <th>Book Title</th>
+                        <th>Author</th>
+                        <th>Quantity</th>
+                        <th>Issue Date</th>
+                        <th>Return Date</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for issue in issued_books %}
+                        <tr>
+                            <td>{{ issue.book.title }}</td>
+                            <td>{{ issue.book.author }}</td>
+                            <td>{{ issue.quantity }}</td>
+                            <td>{{ issue.issue_date|date:"d M Y" }}</td>
+                            <td>{% if issue.return_date %}{{ issue.return_date|date:"d M Y" }}{% else %}—{% endif %}</td>
+                            <td>
+                                {% if issue.is_returned %}
+                                    <span class="status-badge status-returned">Returned</span>
+                                {% else %}
+                                    <span class="status-badge status-active">Active</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% endif %}
+    </div>
+</body>
+</html>
